@@ -31,14 +31,3 @@ from pyabsa.functional.config import ATEPCConfigManager
 from pyabsa.functional.config import ClassificationConfigManager
 from pyabsa.utils.file_utils import check_update_log, check_dataset
 from pyabsa.utils.pyabsa_utils import validate_version
-
-validate_version()
-
-check_dataset()
-
-checker = UpdateChecker()
-check_result = checker.check(__name__, __version__)
-
-if check_result:
-    print(check_result)
-    check_update_log()

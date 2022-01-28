@@ -55,7 +55,8 @@ class SentimentClassifier:
                 tokenizer_path = find_file(model_arg, '.tokenizer', exclude_key=['__MACOSX'])
                 config_path = find_file(model_arg, '.config', exclude_key=['__MACOSX'])
 
-                self.opt = pickle.load(open(config_path, mode='rb'))
+                with open(config_path, mode='rb') as f:
+                    self.opt = pickle.load(f)
 
                 if state_dict_path or model_path:
                     if hasattr(APCModelList, self.opt.model.__name__.upper()):
