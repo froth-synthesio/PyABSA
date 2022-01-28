@@ -4,7 +4,6 @@
 # Copyright (C) 2018. All Rights Reserved.
 
 import numpy as np
-import tqdm
 from pyabsa.core.apc.classic.__bert__.dataset_utils.dependency_graph import configure_spacy_model
 from torch.utils.data import Dataset
 from transformers import AutoTokenizer
@@ -130,7 +129,7 @@ class BERTBaselineABSADataset(Dataset):
         all_data = []
 
         ex_id = 0
-        for text in tqdm.tqdm(samples, postfix='building word indices...'):
+        for text in samples:
             try:
                 # handle for empty lines in inferring_tutorials dataset_utils
                 if text is None or '' == text.strip():

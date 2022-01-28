@@ -50,16 +50,10 @@ class SentimentClassifier:
             try:
                 if 'fine-tuned' in model_arg:
                     raise ValueError('Do not support to directly load a fine-tuned model, please load a .state_dict or .model instead!')
-                print('Load sentiment classifier from', model_arg)
                 state_dict_path = find_file(model_arg, '.state_dict', exclude_key=['__MACOSX'])
                 model_path = find_file(model_arg, '.model', exclude_key=['__MACOSX'])
                 tokenizer_path = find_file(model_arg, '.tokenizer', exclude_key=['__MACOSX'])
                 config_path = find_file(model_arg, '.config', exclude_key=['__MACOSX'])
-
-                print('config: {}'.format(config_path))
-                print('state_dict: {}'.format(state_dict_path))
-                print('model: {}'.format(model_path))
-                print('tokenizer: {}'.format(tokenizer_path))
 
                 self.opt = pickle.load(open(config_path, mode='rb'))
 
@@ -109,9 +103,6 @@ class SentimentClassifier:
                             self.model.load_state_dict(torch.load(state_dict_path, map_location='cpu'))
 
                         self.tokenizer = tokenizer
-
-                print('Config used in Training:')
-                print_args(self.opt, mode=1)
 
             except Exception as e:
                 raise RuntimeError('Fail to load the model from {}! \nException: {} '.format(e, model_arg))
@@ -178,7 +169,8 @@ class SentimentClassifier:
                     print_result=True,
                     save_result=False,
                     clear_input_samples=True,
-                    ignore_error=True):
+                    ignore_error=True,
+                    merge=False):
 
         if clear_input_samples:
             self.clear_input_samples()
@@ -191,20 +183,21 @@ class SentimentClassifier:
 
         self.dataset.prepare_infer_dataset(target_file, ignore_error=ignore_error)
         self.infer_dataloader = DataLoader(dataset=self.dataset, batch_size=self.opt.eval_batch_size, pin_memory=True, shuffle=False)
-        return self._infer(save_path=save_path if save_result else None, print_result=print_result)
+        return self._infer(save_path=save_path if save_result else None, print_result=print_result, merge=merge)
 
-    def infer(self, text: str = None,
+    def infer(self, texts: list = None,
               print_result=True,
-              clear_input_samples=True):
+              clear_input_samples=True,
+              merge=False):
 
         if clear_input_samples:
             self.clear_input_samples()
-        if text:
-            self.dataset.prepare_infer_sample(text)
+        if texts:
+            self.dataset.prepare_infer_sample(texts)
         else:
             raise RuntimeError('Please specify your datasets path!')
         self.infer_dataloader = DataLoader(dataset=self.dataset, batch_size=self.opt.eval_batch_size, shuffle=False)
-        return self._infer(print_result=print_result)
+        return self._infer(print_result=print_result, merge=merge)
 
     def merge_results(self, results):
         """ merge APC results have the same input text
@@ -232,7 +225,7 @@ class SentimentClassifier:
 
         return final_res
 
-    def _infer(self, save_path=None, print_result=True):
+    def _infer(self, save_path=None, print_result=True, merge=False):
 
         _params = filter(lambda p: p.requires_grad, self.model.parameters())
 
@@ -276,8 +269,8 @@ class SentimentClassifier:
                         'ref_check': correct[sent == real_sent] if real_sent != '-999' else '',
                     })
                     n_total += 1
-
-        results = self.merge_results(results)
+        if merge:
+            results = self.merge_results(results)
         try:
             if print_result:
                 for result in results:

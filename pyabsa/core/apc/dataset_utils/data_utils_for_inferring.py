@@ -7,7 +7,6 @@
 import numpy as np
 from pyabsa.utils.pyabsa_utils import check_and_fix_labels, validate_example
 from torch.utils.data import Dataset
-from tqdm import tqdm
 
 from .apc_utils import (build_sentiment_window,
                         build_spc_mask_vec,
@@ -44,10 +43,6 @@ class ABSADataset(Dataset):
                 sample += ' !sent! ' + str(ref_sent[int(i / 2)])
                 samples.append(sample.replace('[TEMP]', '[ASP]'))
         elif not ref_sent or int((len(splits) - 1) / 2) != len(ref_sent):
-            if not ref_sent:
-                print(_text, ' -> No the reference sentiment found')
-            else:
-                print(_text, ' -> Unequal length of reference sentiment and aspects, ignore the reference sentiment.')
 
             for i in range(0, len(splits) - 1, 2):
                 sample = text.replace('[ASP]' + splits[i + 1] + '[ASP]',
@@ -58,8 +53,11 @@ class ABSADataset(Dataset):
 
         return samples
 
-    def prepare_infer_sample(self, text: str):
-        self.process_data(self.parse_sample(text))
+    def prepare_infer_sample(self, texts: list):
+        samples = []
+        for text in texts:
+            samples.extend(self.parse_sample(text))
+        self.process_data(samples)
 
     def prepare_infer_dataset(self, infer_file, ignore_error):
         lines = load_apc_datasets(infer_file)
@@ -74,7 +72,7 @@ class ABSADataset(Dataset):
         label_set = set()
         ex_id = 0
         if len(samples) > 1:
-            it = tqdm(samples, postfix='building word indices...')
+            it = samples
         else:
             it = samples
         for i, text in enumerate(it):
