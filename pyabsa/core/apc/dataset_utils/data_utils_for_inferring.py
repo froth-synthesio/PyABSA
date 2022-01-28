@@ -20,7 +20,8 @@ from .apc_utils_for_dlcf_dca import prepare_input_for_dlcf_dca, configure_dlcf_s
 class ABSADataset(Dataset):
 
     def __init__(self, tokenizer, opt):
-        configure_spacy_model(opt)
+        if opt.get("load_spacy_model", False):
+            configure_spacy_model(opt)
         self.tokenizer = tokenizer
         self.opt = opt
         self.all_data = []

@@ -282,6 +282,12 @@ class APCConfigManager(ConfigManager):
         """
         super().__init__(args, **kwargs)
 
+    def get(self, item, default=None):
+        if hasattr(self, item):
+            return getattr(self, item)
+        else:
+            return default
+
     @staticmethod
     def set_apc_config(configType: str, newitem: dict):
         if isinstance(newitem, dict):
