@@ -190,66 +190,66 @@ class Instructor:
                 loss.backward()
                 self.optimizer.step()
 
-                # evaluate if test set is available
-                if self.opt.dataset_file['test'] and global_step % self.opt.log_step == 0:
-                    if epoch >= self.opt.evaluate_begin:
-                        if self.val_dataloaders:
-                            test_acc, f1 = self._evaluate_acc_f1(self.val_dataloaders[0])
-                        else:
-                            test_acc, f1 = self._evaluate_acc_f1(self.test_dataloader)
-                        self.opt.metrics_of_this_checkpoint['acc'] = test_acc
-                        self.opt.metrics_of_this_checkpoint['f1'] = f1
-
-                        sum_acc += test_acc
-                        sum_f1 += f1
-
-                        if test_acc > max_fold_acc or f1 > max_fold_f1:
-
-                            if test_acc > max_fold_acc:
-                                patience = self.opt.patience
-                                max_fold_acc = test_acc
-
-                            if f1 > max_fold_f1:
-                                max_fold_f1 = f1
-                                patience = self.opt.patience
-
-                            if self.opt.model_path_to_save:
-                                if not os.path.exists(self.opt.model_path_to_save):
-                                    os.mkdir(self.opt.model_path_to_save)
-                                if save_path:
-                                    try:
-                                        shutil.rmtree(save_path)
-                                        # logger.info('Remove sub-optimal trained model:', save_path)
-                                    except:
-                                        # logger.info('Can not remove sub-optimal trained model:', save_path)
-                                        pass
-                                save_path = '{0}/{1}_{2}_acc_{3}_f1_{4}/'.format(self.opt.model_path_to_save,
-                                                                                 self.opt.model_name,
-                                                                                 self.opt.dataset_name,
-                                                                                 round(test_acc * 100, 2),
-                                                                                 round(f1 * 100, 2)
-                                                                                 )
-
-                                if test_acc > self.opt.max_test_metrics['max_apc_test_acc']:
-                                    self.opt.max_test_metrics['max_apc_test_acc'] = test_acc
-                                if f1 > self.opt.max_test_metrics['max_apc_test_f1']:
-                                    self.opt.max_test_metrics['max_apc_test_f1'] = f1
-
-                                save_model(self.opt, self.model, self.tokenizer, save_path)
-                        else:
-                            patience -= 1
-                        postfix = ('Epoch:{} | Loss:{:.4f} | Test Acc:{:.2f}(max:{:.2f}) |'
-                                   ' Test F1:{:.2f}(max:{:.2f})'.format(epoch,
-                                                                        loss.item(),
-                                                                        test_acc * 100,
-                                                                        max_fold_acc * 100,
-                                                                        f1 * 100,
-                                                                        max_fold_f1 * 100))
-                    else:
-                        postfix = 'Epoch:{} | Loss: {} | No evaluation until epoch:{}'.format(epoch, round(loss.item(), 8), self.opt.evaluate_begin)
-
                 iterator.postfix = postfix
                 iterator.refresh()
+
+            # evaluate if test set is available
+            if self.opt.dataset_file['test'] and global_step % self.opt.log_step == 0:
+                if epoch >= self.opt.evaluate_begin:
+                    if self.val_dataloaders:
+                        test_acc, f1 = self._evaluate_acc_f1(self.val_dataloaders[0])
+                    else:
+                        test_acc, f1 = self._evaluate_acc_f1(self.test_dataloader)
+                    self.opt.metrics_of_this_checkpoint['acc'] = test_acc
+                    self.opt.metrics_of_this_checkpoint['f1'] = f1
+
+                    sum_acc += test_acc
+                    sum_f1 += f1
+
+                    if test_acc > max_fold_acc or f1 > max_fold_f1:
+
+                        if test_acc > max_fold_acc:
+                            patience = self.opt.patience
+                            max_fold_acc = test_acc
+
+                        if f1 > max_fold_f1:
+                            max_fold_f1 = f1
+                            patience = self.opt.patience
+
+                        if self.opt.model_path_to_save:
+                            if not os.path.exists(self.opt.model_path_to_save):
+                                os.mkdir(self.opt.model_path_to_save)
+                            if save_path:
+                                try:
+                                    shutil.rmtree(save_path)
+                                    # logger.info('Remove sub-optimal trained model:', save_path)
+                                except:
+                                    # logger.info('Can not remove sub-optimal trained model:', save_path)
+                                    pass
+                            save_path = '{0}/{1}_{2}_acc_{3}_f1_{4}/'.format(self.opt.model_path_to_save,
+                                                                                self.opt.model_name,
+                                                                                self.opt.dataset_name,
+                                                                                round(test_acc * 100, 2),
+                                                                                round(f1 * 100, 2)
+                                                                                )
+
+                            if test_acc > self.opt.max_test_metrics['max_apc_test_acc']:
+                                self.opt.max_test_metrics['max_apc_test_acc'] = test_acc
+                            if f1 > self.opt.max_test_metrics['max_apc_test_f1']:
+                                self.opt.max_test_metrics['max_apc_test_f1'] = f1
+
+                            save_model(self.opt, self.model, self.tokenizer, save_path)
+                    else:
+                        patience -= 1
+                    postfix = ('Epoch:{} | Loss:{:.4f} | Test Acc:{:.2f}(max:{:.2f}) |'
+                                ' Test F1:{:.2f}(max:{:.2f})'.format(epoch,
+                                                                    loss.item(),
+                                                                    test_acc * 100,
+                                                                    max_fold_acc * 100,
+                                                                    f1 * 100,
+                                                                    max_fold_f1 * 100))
+                else:
+                    postfix = 'Epoch:{} | Loss: {} | No evaluation until epoch:{}'.format(epoch, round(loss.item(), 8), self.opt.evaluate_begin)
             if patience < 0:
                 break
         if self.val_dataloaders:
