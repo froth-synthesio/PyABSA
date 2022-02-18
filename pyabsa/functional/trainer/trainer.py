@@ -127,8 +127,7 @@ class Trainer:
             config.model_path_to_save = None
 
         self.inference_model = None
-
-        self.train()
+        self.model_path = None
 
     def train(self):
         """
@@ -154,6 +153,7 @@ class Trainer:
         if self.checkpoint_save_mode:
             if os.path.exists(max(model_path)):
                 self.inference_model = self.model_class(max(model_path))
+                self.model_path = max(model_path)
         else:
             self.inference_model = model
 

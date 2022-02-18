@@ -103,10 +103,26 @@ class ClassificationDatasetList(list):
 filter_key_words = ['.py', '.ignore', '.md', 'readme', 'log', 'result', 'zip', '.state_dict', '.model', '.png', 'acc_', 'f1_']
 
 
+def simple_detect_files(dataset_path, filename):
+    f = os.path.join(dataset_path, filename)
+    if os.path.exists(f):
+        return f
+    else:
+        return None
+
+
 def detect_dataset(dataset_path, task='apc'):
+    dataset_file = {'train': [], 'test': [], 'valid': []}
+
+    train_file = simple_detect_files(dataset_path, "train.txt")
+    test_file = simple_detect_files(dataset_path, "test.txt")
+    if train_file and test_file:
+        dataset_file["train"].append(train_file)
+        dataset_file["test"].append(test_file)
+        return dataset_file
+
     if not isinstance(dataset_path, DatasetItem):
         dataset_path = DatasetItem(dataset_path)
-    dataset_file = {'train': [], 'test': [], 'valid': []}
     for d in dataset_path:
         if not os.path.exists(d) or hasattr(ABSADatasetList, d) or hasattr(ClassificationDatasetList, d):
             print('{} dataset is loading from: {}'.format(d, 'https://github.com/yangheng95/ABSADatasets'))
