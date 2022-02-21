@@ -13,6 +13,7 @@ from findfile import find_file
 from termcolor import colored
 from torch.utils.data import DataLoader
 from transformers import AutoTokenizer, AutoModel
+from sklearn.metrics import classification_report
 
 from pyabsa.core.apc.classic.__glove__.dataset_utils.data_utils_for_training import build_embedding_matrix, build_tokenizer
 from pyabsa.core.apc.models.ensembler import APCEnsembler
@@ -316,11 +317,19 @@ class SentimentClassifier:
         except Exception as e:
             print('Can not save result: {}, Exception: {}'.format(text_raw, e))
 
+        y_true = flatten([r["ref_sentiment"] for r in results])
+        y_pred = flatten([r["sentiment"] for r in results])
+
         if len(self.infer_dataloader) > 1:
             print('Total samples:{}'.format(n_total))
             print('Labeled samples:{}'.format(n_labeled))
             print('Prediction Accuracy:{}%'.format(100 * n_correct / n_labeled if n_labeled else 'N.A.'))
+            print(classification_report(y_true, y_pred))
         return results
 
     def clear_input_samples(self):
         self.dataset.all_data = []
+
+
+def flatten(l):
+    return [item for sublist in l for item in sublist]
